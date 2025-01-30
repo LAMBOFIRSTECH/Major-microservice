@@ -1,0 +1,389 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "DailyTasks | Api",
+    "description": "An ASP.NET Core Web API for managing Tasks App",
+    "contact": {
+      "name": "Artur Lambo",
+      "email": "lamboartur94@gmail.com"
+    },
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:7082"
+    }
+  ],
+  "paths": {
+    "/api/v1/singleOrAllTasks": {
+      "get": {
+        "tags": [
+          "TasksManagement"
+        ],
+        "summary": "Affiche la liste de toutes les taches.",
+        "parameters": [
+          {
+            "name": "Titre",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/tache": {
+      "post": {
+        "tags": [
+          "TasksManagement"
+        ],
+        "summary": "Crée une tache.",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/tache/{titre}": {
+      "delete": {
+        "tags": [
+          "TasksManagement"
+        ],
+        "summary": "Supprime une tache en fonction de son matricule.",
+        "parameters": [
+          {
+            "name": "titre",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TasksManagement"
+        ],
+        "summary": "Met à jour les informations d'une tache.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "titre",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tache"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "summary": "Affiche la liste de tous les utilisateurs.",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/all": {
+      "get": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/SingleUser/{Nom}/{Role}": {
+      "get": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "summary": "Affiche les informations sur un utilisateur en fonction de son ID.",
+        "parameters": [
+          {
+            "name": "Nom",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Role",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/user": {
+      "post": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "summary": "Créée un utilisateur.",
+        "description": "Sample request:\r\n            \r\n    POST /CreateUser\r\n    {\r\n       \"nom\": \"username\",\r\n       \"email\": \"adress_name@mailing_server.domain\" \r\n       \"role\": enum {Utilisateur, Administrateur},\r\n       \"pass\": \"password\",\r\n       \"lesTaches\": []\r\n    }",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Utilisateur"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Utilisateur"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Utilisateur"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/user/{Nom}/{Role}": {
+      "delete": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "summary": "Supprime un utilisateur en fonction de son ID.",
+        "parameters": [
+          {
+            "name": "Nom",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Role",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/v1/user/{nom}/{currentpassword}/{newpassword}": {
+      "patch": {
+        "tags": [
+          "UsersManagement"
+        ],
+        "summary": "Met à jour le mot de passe d'un utilisateur en fonction de son nom.",
+        "parameters": [
+          {
+            "name": "nom",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currentpassword",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "password"
+            }
+          },
+          {
+            "name": "newpassword",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Privilege": {
+        "enum": [0, 1],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Tache": {
+        "required": [
+          "endDate",
+          "startDate",
+          "titre"
+        ],
+        "type": "object",
+        "properties": {
+          "titre": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "nomUtilisateur": {
+            "type": "string",
+            "nullable": true
+          },
+          "emailUtilisateur": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Représente une tache dans le système"
+      },
+      "Utilisateur": {
+        "required": [
+          "email",
+          "nom",
+          "pass",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Représente l'identifiant unique d'un utilisateur.",
+            "format": "uuid"
+          },
+          "nom": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Privilege"
+          },
+          "pass": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Représente un utilisateur dans le système."
+      }
+    }
+  }
+}

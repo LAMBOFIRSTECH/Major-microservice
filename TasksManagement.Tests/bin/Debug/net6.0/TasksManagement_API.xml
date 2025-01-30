@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TasksManagement_API</name>
+    </assembly>
+    <members>
+        <member name="M:TasksManagement_API.Controllers.TasksManagementController.GetSingleOrAllTasks(System.String)">
+            <summary>
+            Affiche la liste de toutes les taches.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.TasksManagementController.CreateTask(TasksManagement_API.Models.Tache)">
+            <summary>
+            Crée une tache. 
+            </summary>
+            <param name="tache"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.TasksManagementController.DeleteTaskById(System.String)">
+            <summary>
+            Supprime une tache en fonction de son matricule.
+            </summary>
+            <param name="titre"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.TasksManagementController.UpdateTask(System.String,TasksManagement_API.Models.Tache)">
+            <summary>
+            Met à jour les informations d'une tache.
+            </summary>
+            <param name="username"></param>
+            <param name="tache"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.UsersManagementController.GetUsers">
+            <summary>
+            Affiche la liste de tous les utilisateurs.
+            </summary>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.UsersManagementController.GetSingleUser(System.String,System.String)">
+            <summary>
+            Affiche les informations sur un utilisateur en fonction de son ID.
+            </summary>
+            <param name="Nom"></param>
+            <param name="Role"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.UsersManagementController.CreateUser(TasksManagement_API.Models.Utilisateur)">
+            <summary>
+            Créée un utilisateur.
+            </summary>
+            <remarks>
+            <para>Sample request:</para>
+            <para>
+                POST /CreateUser
+                {
+                   "nom": "username",
+                   "email": "adress_name@mailing_server.domain"
+                   "role": enum {Utilisateur, Administrateur},
+                   "pass": "password",
+                   "lesTaches": []
+                }
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.UsersManagementController.DeleteUserByDetails(System.String,System.String)">
+            <summary>
+            Supprime un utilisateur en fonction de son ID.
+            </summary>
+            <param name="Nom"></param>
+            <param name="Role"></param>
+            <returns></returns>
+        </member>
+        <member name="M:TasksManagement_API.Controllers.UsersManagementController.UpdateUserPassword(System.String,System.String,System.String)">
+            <summary>
+            Met à jour le mot de passe d'un utilisateur en fonction de son nom.
+            </summary>
+            <param name="nom"></param>
+            <param name="currentpassword"></param>
+            <param name="newpassword"></param>
+            <returns></returns>
+        </member>
+        <member name="T:TasksManagement_API.Models.Competence">
+            <summary>
+            Représente une compétence dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.DTO.UtilisateurDto">
+            <summary>
+            Représente un utilisateur dans le système.
+            </summary>
+        </member>
+        <member name="P:TasksManagement_API.Models.DTO.UtilisateurDto.ID">
+            <summary>
+            Représente l'identifiant unique d'un utilisateur.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Employe">
+            <summary>
+            Représente un employé dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Equipe">
+            <summary>
+            Représente une équipe dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Fonction">
+            <summary>
+            Représente une fonction dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Formation">
+            <summary>
+            Représente une formation dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Mission">
+            <summary>
+            Représente une mission dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Projet">
+            <summary>
+            Représente un projet dans le système.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Tache">
+            <summary>
+            Représente une tache dans le système
+            </summary>
+        </member>
+        <member name="P:TasksManagement_API.Models.Tache.ID">
+            <summary>
+            Représente l'identifiant unique d'une tache.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.TokenResult">
+            <summary>
+            Gestion du token JWT.
+            </summary>
+        </member>
+        <member name="T:TasksManagement_API.Models.Utilisateur">
+            <summary>
+            Représente un utilisateur dans le système.
+            </summary>
+        </member>
+        <member name="P:TasksManagement_API.Models.Utilisateur.ID">
+            <summary>
+            Représente l'identifiant unique d'un utilisateur.
+            </summary>
+        </member>
+    </members>
+</doc>

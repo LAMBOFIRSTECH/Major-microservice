@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# ====================
+# Script SonarQube Analysis
+# ====================
+
+# Fonction pour gérer les couleurs dans l'affichage
+colors() {
+    RED="\033[0;31m"
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    CYAN="\033[1;36m"
+    NC="\033[0m" # Réinitialisation
+    printf "${!1}${2} ${NC}\n"
+}
+
+# --------------------
+# 1. Vérification des Pré-requis
+# --------------------
+
+# Vérification de la présence du fichier .env
+if [ ! -f .env ]; then
+    colors "RED" "Erreur : Fichier .env non trouvé. Veuillez configurer les variables nécessaires."
+    exit 1
+fi
+source .env
+
+# Détection automatique de la solution .sln
+SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
+SOLUTION_FILE=$(ls *.sln)
+# ROOT_DIR=$(pwd)
+# COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
+COVERAGE_REPORT_PATH="/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/authentication/Couverture/coverage.opencover.xml"
+# Vérification des variables essentielles
+required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var}" ]]; then
+    colors "RED" "La variable $var n'est pas définie. Veuillez vérifier votre configuration."
+    exit 1
+  fi
+done
+
+if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
+    colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
+    exit 1
+fi
+
+# --------------------
+# 2. Formattage du fichier de couverture de code
+# --------------------
+
+sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
+
+# --------------------
+# 3. Vérification du Serveur SonarQube
+# --------------------
+colors "CYAN" "Vérification de l'état du serveur SonarQube à l'adresse $SONAR_HOST_URL"
+check_server=$(curl -s -L -o /dev/null -w "%{http_code}" "$SONAR_HOST_URL")
+
+if [[ "$check_server" != "200" && "$check_server" != "302" ]]; then
+    colors "RED" "Erreur : Le serveur SonarQube est inaccessible. Code HTTP: $check_server"
+    exit 1
+fi
+
+# --------------------
+# 4. Analyse SonarQube
+# --------------------
+colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
+
+# Vérification de la présence de dotnet-sonarscanner
+if ! command -v dotnet-sonarscanner &>/dev/null; then
+    colors "CYAN" "SonarScanner pour .NET non trouvé. Installation en cours..."
+    # Installation de dotnet-sonarscanner
+    if dotnet tool install --global dotnet-sonarscanner --version 6.0.0; then
+        colors "GREEN" "SonarScanner pour .NET installé avec succès."
+        export PATH="$PATH:$HOME/.dotnet/tools"
+    else
+        colors "RED" "Erreur : Impossible d'installer dotnet-sonarscanner."
+        exit 1
+    fi
+else
+    colors "CYAN" "SonarScanner pour .NET déjà installé."
+fi
+
+# Initialisation de l'analyse
+dotnet sonarscanner begin \
+    /k:"$SONAR_PROJECT_KEY" \
+    /d:sonar.host.url="$SONAR_HOST_URL" \
+    /d:sonar.token="$SONAR_USER_TOKEN" \
+    /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
+# --------------------
+# 5. Restauration du projet
+# ------------------------
+dotnet restore "$SOLUTION_FILE"
+colors "YELLOW" "Restauration du projet terminée"
+
+# --------------------
+# 6. Compilation du Projet
+# --------------------
+colors "YELLOW" "Compilation de la solution $SOLUTION_FILE avec configuration $BUILD_CONFIGURATION"
+dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore
+
+# Vérification de la réussite de la compilation
+if [[ $? -ne 0 ]]; then
+    colors "RED" "Échec de la compilation. Analyse SonarQube interrompue."
+    exit 1
+fi
+
+# ------------------------
+# 7. Fin de l'analyse SonarQube.
+# ------------------------
+
+colors "YELLOW" "Finalisation de l'analyse SonarQube"
+
+dotnet sonarscanner end /d:sonar.token="$SONAR_USER_TOKEN"
+
+if [[ $? -ne 0 ]]; then
+    colors "RED" "Échec de l'analyse SonarQube.."
+    exit 1
+fi
+
+# --------------------
+# 8. Message de Succès
+# --------------------
+colors "GREEN" "####################### Analyse SonarQube terminée avec succès ##########################"
+colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                   |"
+colors "CYAN"  "|  Serveur SonarQube accessible et analyse effectuée                                    |"
+colors "GREEN" "#########################################################################################"
+exit 0
