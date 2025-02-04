@@ -68,89 +68,106 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
 		}
 	}
 
-	private async Task<RsaSecurityKey> GetSigningKeyFromVaultServer()
-	{
+      private async Task<string> GetAppRoleTokenFromVault()
+    {
+        var hashiCorpRoleID = configuration["HashiCorp:AppRole:RoleID"];
+        var hashiCorpSecretID = configuration["HashiCorp:AppRole:SecretID"];
+        var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
+        if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpty(hashiCorpHttpClient))
+        {
+            log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
+            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+        }
+        var appRoleAuthMethodInfo = new AppRoleAuthMethodInfo(hashiCorpRoleID, hashiCorpSecretID);
+        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", appRoleAuthMethodInfo);
+        var vaultClient = new VaultClient(vaultClientSettings);
+        try
+        {
+            var authResponse = await vaultClient.V1.Auth.AppRole.LoginAsync(appRoleAuthMethodInfo);
+            string token = authResponse.AuthInfo.ClientToken;
+            if (string.IsNullOrEmpty(token))
+                throw new InvalidOperationException("Empty token retrieve from HashiCorp Vault");
+            return token;
+        }
+        catch (Exception ex) when (ex.InnerException is SocketException socket)
+        {
+            log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP", socket.Message);
+            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
+        }
+    }
+       private async Task<RsaSecurityKey> GetSigningKeyFromVaultServer()
+    {
+        string vautlAppRoleToken = await GetAppRoleTokenFromVault();
+        var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
+        if (string.IsNullOrEmpty(vautlAppRoleToken) || string.IsNullOrEmpty(hashiCorpHttpClient))
+        {
+            log.LogWarning("La configuration de HashiCorp Vault est manquante ou invalide.");
+            throw new InvalidOperationException("La configuration de HashiCorp Vault est manquante ou invalide.");
+        }
+        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
+        var vaultClient = new VaultClient(vaultClientSettings);
+        try
+        {
+            var secretPath = configuration["HashiCorp:SecretsPath"];
+            var secret = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath);
+            if (secret == null)
+            {
+                log.LogError("Le secret Vault est introuvable.");
+                throw new InvalidOperationException("Le secret Vault est introuvable.");
+            }
+            var secretData = secret.Data.Data;
+            if (!secretData.ContainsKey("authenticationSignatureKey"))
+            {
+                log.LogError("La clé publique 'authenticationSignatureKey' est manquante dans le secret Vault.");
+                throw new InvalidOperationException("La clé publique 'authenticationSignatureKey' est introuvable.");
+            }
+            string rawPublicKeyPem = secretData["authenticationSignatureKey"].ToString()!;
+            // Étape 2 : Nettoyer la clé (enlever les espaces ou caractères supplémentaires autour)
+            rawPublicKeyPem = rawPublicKeyPem.Trim(); // Supprimer espaces inutiles
 
-		var hashiCorpToken = configuration["HashiCorp:VaultToken"];
-		var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-		if (string.IsNullOrEmpty(hashiCorpToken) || string.IsNullOrEmpty(hashiCorpHttpClient))
-		{
-			log.LogWarning("La configuration de HashiCorp Vault est manquante ou invalide.");
-			throw new InvalidOperationException("La configuration de HashiCorp Vault est manquante ou invalide.");
-		}
-		var authMethod = new TokenAuthMethodInfo(hashiCorpToken);
-		var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", authMethod);
-		var vaultClient = new VaultClient(vaultClientSettings);
-		try
-		{
-			var secretPath = configuration["HashiCorp:SecretPath"];
-			//var secretPath = "secret/auth-service"; // La façon de récupérer le secretPath n'est pas identique entre l'envoie et le récupération du secret dans vault
-			var secret = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath);
-			if (secret == null)
-			{
-				log.LogError("Le secret Vault est introuvable.");
-				throw new InvalidOperationException("Le secret Vault est introuvable.");
-			}
-			var secretData = secret.Data.Data;
-			if (!secretData.ContainsKey("authenticationPublicKey"))
-			{
-				log.LogError("La clé publique 'authenticationPublicKey' est manquante dans le secret Vault.");
-				throw new InvalidOperationException("La clé publique 'authenticationPublicKey' est introuvable.");
-			}
-			string rawPublicKeyPem = secretData["authenticationPublicKey"].ToString()!;
+            // Vérifier que la clé contient bien les balises PEM
+            if (!rawPublicKeyPem.Contains("-----BEGIN RSA PUBLIC KEY-----") ||
+                !rawPublicKeyPem.Contains("-----END RSA PUBLIC KEY-----"))
+            {
+                log.LogWarning("La clé récupérée n'a pas le bon format PEM.");
+                throw new Exception("La clé récupérée n'a pas le bon format PEM.");
+            }
+            string keyBody = rawPublicKeyPem
+                .Replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                .Replace("-----END RSA PUBLIC KEY-----", "")
+                .Replace("\r", "") // Supprimer retours chariot (Windows)
+                .Replace("\n", "") // Supprimer sauts de ligne
 
-			// Étape 2 : Nettoyer la clé (enlever les espaces ou caractères supplémentaires autour)
-			rawPublicKeyPem = rawPublicKeyPem.Trim(); // Supprimer espaces inutiles
+                .Trim(); // Nettoyage final des espaces en début/fin
 
-			// Vérifier que la clé contient bien les balises PEM
-			if (!rawPublicKeyPem.Contains("-----BEGIN RSA PUBLIC KEY-----") ||
-				!rawPublicKeyPem.Contains("-----END RSA PUBLIC KEY-----"))
-			{
-				log.LogWarning("La clé récupérée n'a pas le bon format PEM.");
-				throw new Exception("La clé récupérée n'a pas le bon format PEM.");
-			}
+            // Vérifier que le contenu n'est pas vide
+            if (string.IsNullOrEmpty(keyBody))
+            {
+                throw new Exception("Le contenu de la clé est vide après le nettoyage.");
+            }
+            string formattedPublicKeyPem = "-----BEGIN RSA PUBLIC KEY-----\n" +
+                string.Join("\n", Enumerable.Range(0, (keyBody.Length + 63) / 64)
+                    .Select(i => keyBody.Substring(i * 64, Math.Min(64, keyBody.Length - (i * 64))))) +
+                "\n-----END RSA PUBLIC KEY-----";
+            var rsa = RSA.Create();
+            rsa.ImportFromPem(formattedPublicKeyPem);
 
-			// Extraire uniquement le contenu de la clé entre les balises
-			string keyBody = rawPublicKeyPem
-				.Replace("-----BEGIN RSA PUBLIC KEY-----", "")
-				.Replace("-----END RSA PUBLIC KEY-----", "")
-				.Replace("\r", "") // Supprimer retours chariot (Windows)
-				.Replace("\n", "") // Supprimer sauts de ligne
+            // Étape 4 : Créer un RsaSecurityKey
+            var rsaSecurityKey = new RsaSecurityKey(rsa);
+            log.LogInformation("La clé publique a été récupérée et formatée avec succès.");
 
-				.Trim(); // Nettoyage final des espaces en début/fin
-
-			// Vérifier que le contenu n'est pas vide
-			if (string.IsNullOrEmpty(keyBody))
-			{
-				throw new Exception("Le contenu de la clé est vide après le nettoyage.");
-			}
-
-			// Réinsérer les balises et formater la clé avec des lignes de 64 caractères
-			string formattedPublicKeyPem = "-----BEGIN RSA PUBLIC KEY-----\n" +
-				string.Join("\n", Enumerable.Range(0, (keyBody.Length + 63) / 64)
-					.Select(i => keyBody.Substring(i * 64, Math.Min(64, keyBody.Length - i * 64)))) +
-				"\n-----END RSA PUBLIC KEY-----";
-
-			// Étape 3 : Importer la clé dans un objet RSA
-			var rsa = RSA.Create();
-			rsa.ImportFromPem(formattedPublicKeyPem);
-
-			// Étape 4 : Créer un RsaSecurityKey
-			var rsaSecurityKey = new RsaSecurityKey(rsa);
-			log.LogInformation("La clé publique a été récupérée et formatée avec succès.");
-
-			return rsaSecurityKey;
-		}
-		catch (FormatException ex)
-		{
-			// Gérer les erreurs de format Base64
-			log.LogError($"Erreur lors de la conversion de la clé publique Base64 : {ex.Message}");
-			throw;
-		}
-		catch (Exception ex)
-		{
-			log.LogError($"Erreur lors de la récupération de la clé publique dans Vault : {ex.Message}");
-			throw;
-		}
-	}
+            return rsaSecurityKey;
+        }
+        catch (FormatException ex)
+        {
+            // Gérer les erreurs de format Base64
+            log.LogError(ex, "Erreur lors de la conversion de la clé publique Base64 ");
+            throw new Exception("Erreur lors de la conversion de la clé publique Base64.", ex);
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Erreur lors de la récupération de la clé publique dans Vault");
+            throw new Exception("Erreur lors de la récupération de la clé publique dans Vault", ex);
+        }
+    }
 }
