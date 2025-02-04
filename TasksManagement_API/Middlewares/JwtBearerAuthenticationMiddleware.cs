@@ -1,74 +1,58 @@
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
 using VaultSharp;
+using VaultSharp.V1.AuthMethods.AppRole;
 using VaultSharp.V1.AuthMethods.Token;
-using VaultSharp.V1.Commons;
-
 namespace TasksManagement_API.Middlewares;
-
 public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearerOptions>
 {
-	private readonly IConfiguration configuration;
-	//private RsaSecurityKey rsaSecurityKey;
-	private readonly ILogger<IConfiguration> log;
-
-	public JwtBearerAuthenticationMiddleware(ILogger<IConfiguration> log, IConfiguration configuration, IOptionsMonitor<JwtBearerOptions> options,
-	ILoggerFactory logger,
-	UrlEncoder encoder,
-	ISystemClock clock)
-	: base(options, logger, encoder, clock)
-	{
-		this.configuration = configuration;
-		this.log = log;
-
-	}
-	// rsaSecurityKey= await GetOrCreateSigningKey();
-
-	protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
-	{
-
-		if (!Request.Headers.ContainsKey("Authorization"))
-			return await Task.FromResult(AuthenticateResult.Fail("Authorization header missing"));
-		try
-		{
-			var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
-			if (!authHeader.Scheme.Equals("Bearer", StringComparison.OrdinalIgnoreCase))
-			{
-				return await Task.FromResult(AuthenticateResult.Fail("Invalid authentication scheme"));
-			}
-			// Récupérer le jeton JWT à partir de l'en-tête d'autorisation
-			var jwtToken = authHeader.Parameter;
-			if (string.IsNullOrEmpty(jwtToken))
-			{
-				return AuthenticateResult.Fail("Token is missing.");
-			}
-
-			var tokenHandler = new JwtSecurityTokenHandler();
+    private readonly IConfiguration configuration;
+    private readonly ILogger<IConfiguration> log;
+    public JwtBearerAuthenticationMiddleware(ILogger<IConfiguration> log, IConfiguration configuration, IOptionsMonitor<JwtBearerOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder,
+    ISystemClock clock)
+    : base(options, logger, encoder, clock)
+    {
+        this.configuration = configuration;
+        this.log = log;
+    }
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (!Request.Headers.ContainsKey("Authorization"))
+            return await Task.FromResult(AuthenticateResult.Fail("Authorization header missing"));
+        try
+        {
+            var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+            if (!authHeader.Scheme.Equals("Bearer", StringComparison.OrdinalIgnoreCase))
+            {
+                return await Task.FromResult(AuthenticateResult.Fail("Invalid authentication scheme"));
+            }
+            var jwtToken = authHeader.Parameter;
+            if (string.IsNullOrEmpty(jwtToken))
+            {
+                return AuthenticateResult.Fail("Token is missing.");
+            }
+            var tokenHandler = new JwtSecurityTokenHandler();
             var validationParameters = Options.TokenValidationParameters;
-            validationParameters.IssuerSigningKey = await GetSigningKeyFromVaultServer();
-			var principal = tokenHandler.ValidateToken(jwtToken, validationParameters, out SecurityToken securityToken);
-			var ticket = new AuthenticationTicket(principal, Scheme.Name);
-			return await Task.FromResult(AuthenticateResult.Success(ticket));
-
-		}
-		catch (Exception ex)
-		{
-			return await Task.FromResult(AuthenticateResult.Fail($"Authentication failed: {ex.Message}"));
-		}
-	}
-
-      private async Task<string> GetAppRoleTokenFromVault()
+            validationParameters.IssuerSigningKey = await GetJwtSigningKeyFromVaultServer();
+            var principal = tokenHandler.ValidateToken(jwtToken, validationParameters, out SecurityToken securityToken);
+            var ticket = new AuthenticationTicket(principal, Scheme.Name);
+            return await Task.FromResult(AuthenticateResult.Success(ticket));
+        }
+        catch (Exception ex)
+        {
+            return await Task.FromResult(AuthenticateResult.Fail($"Authentication failed: {ex.Message}"));
+        }
+    }
+    private async Task<string> GetAppRoleTokenFromVault()
     {
         var hashiCorpRoleID = configuration["HashiCorp:AppRole:RoleID"];
         var hashiCorpSecretID = configuration["HashiCorp:AppRole:SecretID"];
@@ -92,10 +76,10 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
             log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP", socket.Message);
-            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
+            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex);
         }
     }
-       private async Task<RsaSecurityKey> GetSigningKeyFromVaultServer()
+    private async Task<RsaSecurityKey> GetJwtSigningKeyFromVaultServer()
     {
         string vautlAppRoleToken = await GetAppRoleTokenFromVault();
         var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
@@ -122,10 +106,7 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
                 throw new InvalidOperationException("La clé publique 'authenticationSignatureKey' est introuvable.");
             }
             string rawPublicKeyPem = secretData["authenticationSignatureKey"].ToString()!;
-            // Étape 2 : Nettoyer la clé (enlever les espaces ou caractères supplémentaires autour)
-            rawPublicKeyPem = rawPublicKeyPem.Trim(); // Supprimer espaces inutiles
-
-            // Vérifier que la clé contient bien les balises PEM
+            rawPublicKeyPem = rawPublicKeyPem.Trim();
             if (!rawPublicKeyPem.Contains("-----BEGIN RSA PUBLIC KEY-----") ||
                 !rawPublicKeyPem.Contains("-----END RSA PUBLIC KEY-----"))
             {
@@ -135,12 +116,9 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
             string keyBody = rawPublicKeyPem
                 .Replace("-----BEGIN RSA PUBLIC KEY-----", "")
                 .Replace("-----END RSA PUBLIC KEY-----", "")
-                .Replace("\r", "") // Supprimer retours chariot (Windows)
-                .Replace("\n", "") // Supprimer sauts de ligne
-
-                .Trim(); // Nettoyage final des espaces en début/fin
-
-            // Vérifier que le contenu n'est pas vide
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Trim();
             if (string.IsNullOrEmpty(keyBody))
             {
                 throw new Exception("Le contenu de la clé est vide après le nettoyage.");
@@ -151,8 +129,6 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
                 "\n-----END RSA PUBLIC KEY-----";
             var rsa = RSA.Create();
             rsa.ImportFromPem(formattedPublicKeyPem);
-
-            // Étape 4 : Créer un RsaSecurityKey
             var rsaSecurityKey = new RsaSecurityKey(rsa);
             log.LogInformation("La clé publique a été récupérée et formatée avec succès.");
 
@@ -160,7 +136,6 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
         }
         catch (FormatException ex)
         {
-            // Gérer les erreurs de format Base64
             log.LogError(ex, "Erreur lors de la conversion de la clé publique Base64 ");
             throw new Exception("Erreur lors de la conversion de la clé publique Base64.", ex);
         }

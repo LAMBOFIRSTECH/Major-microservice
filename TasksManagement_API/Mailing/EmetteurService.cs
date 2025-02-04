@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace TasksManagement_API.Services
+namespace TasksManagement_API.Mailing;
+public class EmetteurService
 {
-    public class EmetteurService
-    {
-        
-    }
 }

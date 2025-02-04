@@ -9,6 +9,7 @@ services:
       - net_api
     volumes:
       -  /etc/ssl/certs/localhost.pfx:/etc/ssl/certs/localhost.pfx # Certificat pour le serveur en variable d'environnements
+      - ./appsettings.json:/app/appsettings.Development.json
     environment:
       - ASPNETCORE_Kestrel__Certificates__Default__Password=$CERT_PASSWORD
 networks:

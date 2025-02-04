@@ -29,7 +29,6 @@ namespace TasksManagement_API.Services
 			// }
 			// utilisateur.LesTaches.Add(tache);
 			// tache.utilisateur = utilisateur;  // Associer la tâche à l'utilisateur grace à la navigation directe et inverse
-			
 			var createdTask = await tacheRepository.CreateTask(tache); // Qaund la tache est crée on déclenche un évènement
 			var taskCreatedEvent = new TacheCreatedEvent(createdTask);
 			eventBus.Publish(taskCreatedEvent);
