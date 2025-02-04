@@ -1,6 +1,7 @@
 using TasksManagement_API.Models;
 using Microsoft.EntityFrameworkCore;
-namespace TasksManagement_API.Reposirtories;
+using TasksManagement_API.DataBaseContext;
+namespace TasksManagement_API.Repositories;
 public class TacheRepository
 {
     private readonly DailyTasksMigrationsContext dataBaseSqlServerContext;

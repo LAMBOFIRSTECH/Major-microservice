@@ -1,11 +1,11 @@
 using TasksManagement_API.Interfaces;
 using TasksManagement_API.Models;
-using TasksManagement_API.Reposirtories;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using TasksManagement_API.Repositories;
 namespace TasksManagement_API.Services
 {
-	public class UtilisateurService : IReadUsersMethods, IWriteUsersMethods
+    public class UtilisateurService : IReadUsersMethods, IWriteUsersMethods
 	{
 		private readonly UtilisateurRepository utilisateurRepository;
 		private readonly IConfiguration configuration;

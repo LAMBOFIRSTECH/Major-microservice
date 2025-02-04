@@ -5,7 +5,7 @@ using TasksManagement_API.Services;
 using Moq;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
-using TasksManagement_API.Reposirtories;
+using TasksManagement_API.Repositories;
 
 namespace TasksManagement.Tests
 {

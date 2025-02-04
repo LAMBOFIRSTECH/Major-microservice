@@ -1,7 +1,7 @@
 using TasksManagement_API.Interfaces;
 using TasksManagement_API.Mailing;
 using TasksManagement_API.Models;
-using TasksManagement_API.Reposirtories;
+using TasksManagement_API.Repositories;
 
 #nullable disable
 namespace TasksManagement_API.Services

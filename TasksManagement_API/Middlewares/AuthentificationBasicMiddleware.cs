@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using TasksManagement_API.DataBaseContext;
 namespace TasksManagement_API.Middlewares;
 public class AuthentificationBasicMiddleware : AuthenticationHandler<AuthenticationSchemeOptions>
 {

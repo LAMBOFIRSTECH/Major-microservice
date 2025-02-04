@@ -27,7 +27,7 @@ public class NotificationService
         }
 
         utilisateur.LesTaches!.Add(tache);
-        tache.utilisateur = utilisateur;
+        tache.Utilisateur = utilisateur;
     }
     public async Task<Func<IQueryable<Utilisateur>, IQueryable<Utilisateur>>> GetUserTasksByFilter(Tache tache)
     {

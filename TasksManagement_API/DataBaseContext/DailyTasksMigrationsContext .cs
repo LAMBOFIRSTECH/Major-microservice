@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-namespace TasksManagement_API.Models;
+using TasksManagement_API.Models;
+namespace TasksManagement_API.DataBaseContext;
 
 public class DailyTasksMigrationsContext : DbContext
 {
@@ -18,22 +19,18 @@ public class DailyTasksMigrationsContext : DbContext
 	{
 		modelBuilder.Entity<Utilisateur>()
 		   .HasMany(u => u.LesTaches)
-		   .WithOne(t => t.utilisateur)
+		   .WithOne(t => t.Utilisateur)
 		   .HasForeignKey(t => t.UserId)
 		   .IsRequired()
 		   .OnDelete(DeleteBehavior.Cascade);
 		modelBuilder.Entity<Tache>();
-		
 		modelBuilder.Entity<Projet>()
 		   .HasIndex(p => p.Code)
 		   .IsUnique(); // Montre que c'est une clé candidate
 		base.OnModelCreating(modelBuilder);
-		
 		modelBuilder.Entity<Employe>()
 		   .HasIndex(e => e.Matricule)
 		   .IsUnique(); // Montre que c'est une clé candidate
 		base.OnModelCreating(modelBuilder);
 	}
-
 }
-

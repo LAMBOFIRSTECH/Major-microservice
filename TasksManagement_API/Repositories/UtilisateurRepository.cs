@@ -1,6 +1,7 @@
 using TasksManagement_API.Models;
 using Microsoft.AspNetCore.DataProtection;
-namespace TasksManagement_API.Reposirtories;
+using TasksManagement_API.DataBaseContext;
+namespace TasksManagement_API.Repositories;
 public class UtilisateurRepository
 {
     private readonly DailyTasksMigrationsContext dataBaseSqlServerContext;

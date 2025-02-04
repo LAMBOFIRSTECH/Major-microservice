@@ -6,7 +6,6 @@ using TasksManagement_API.Interfaces;
 namespace TasksManagement_API.Controllers;
 [ApiController]
 [Route("api/v1/")]
-[Produces("application/json")]
 
 public class TasksManagementController : ControllerBase
 {
@@ -21,7 +20,6 @@ public class TasksManagementController : ControllerBase
 	/// <summary>
 	/// Affiche la liste de toutes les taches.
 	/// </summary>
-
 	/// <returns></returns>
 	//[Authorize(Policy = "UserPolicy")]
 	[HttpGet("singleOrAllTasks/")]
@@ -36,7 +34,6 @@ public class TasksManagementController : ControllerBase
 				if (!tache.Any())
 				{
 					return NotFound();
-
 				}
 				return Ok(tache.FirstOrDefault());
 			}
@@ -49,7 +46,7 @@ public class TasksManagementController : ControllerBase
 	}
 
 	/// <summary>
-	/// Crée une tache. 
+	/// Crée une tache.
 	/// </summary>
 	/// <param name="tache"></param>
 	/// <returns></returns>
@@ -62,11 +59,11 @@ public class TasksManagementController : ControllerBase
 		}
 		try
 		{
-			var Taches = await readTasksMethods.GetSingleOrAllTaches(query => query.Where(t => t.Titre.Equals(tache.Titre) && t.utilisateur!.ID.Equals(tache.UserId)));
+			var Taches = await readTasksMethods.GetSingleOrAllTaches(query => query.Where(t => t.Titre.Equals(tache.Titre) && t.Utilisateur!.ID.Equals(tache.UserId)));
 			var tacheExistante = Taches.FirstOrDefault();
 			if (tache.StartDate.Date >= tache.EndDate.Date)
 			{
-				var message = "Exemple : Date de debut ->  01/01/2024  (doit etre '>' Supérieur) Date de fin -> 02/02/2024";
+                const string message = "Exemple : Date de debut ->  01/01/2024  (doit etre '>' Supérieur) Date de fin -> 02/02/2024";
 				return StatusCode(StatusCodes.Status406NotAcceptable, message);
 			}
 			if (tacheExistante != null)
@@ -83,11 +80,10 @@ public class TasksManagementController : ControllerBase
 				EmailUtilisateur = tache.EmailUtilisateur
 			};
 			await writeTasksMethods.CreateTask(newTache);
-			return CreatedAtAction(nameof(GetSingleOrAllTasks), new { Titre = newTache.Titre }, newTache);
+			return CreatedAtAction(nameof(GetSingleOrAllTasks), new { newTache.Titre }, newTache);
 		}
 		catch (Exception ex)
 		{
-
 			return StatusCode(StatusCodes.Status500InternalServerError, ex.Message.Trim());
 		}
 	}
@@ -137,7 +133,7 @@ public class TasksManagementController : ControllerBase
 			}
 			if (tache.StartDate.Date >= tache.EndDate.Date)
 			{
-				var message = "Exemple : Date de debut ->  01/01/2024  (doit etre '>' Supérieur) Date de fin -> 02/02/2024";
+                const string message = "Exemple : Date de debut ->  01/01/2024  (doit etre '>' Supérieur) Date de fin -> 02/02/2024";
 				return StatusCode(StatusCodes.Status406NotAcceptable, message);
 			}
 			await writeTasksMethods.UpdateTask(username, tache);

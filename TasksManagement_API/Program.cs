@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using TasksManagement_API.Models;
 using TasksManagement_API.Interfaces;
-using TasksManagement_API.Reposirtories;
 using TasksManagement_API.Services;
 using TasksManagement_API.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using TasksManagement_API.Mailing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using TasksManagement_API.Repositories;
+using TasksManagement_API.DataBaseContext;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
