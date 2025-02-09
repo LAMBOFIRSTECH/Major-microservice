@@ -92,7 +92,7 @@ public class JwtBearerAuthenticationMiddleware : AuthenticationHandler<JwtBearer
         var vaultClient = new VaultClient(vaultClientSettings);
         try
         {
-            var secretPath = configuration["HashiCorp:SecretsPath"];
+            var secretPath = configuration["HashiCorp:JwtPublicKeyPath"];
             var secret = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath);
             if (secret == null)
             {

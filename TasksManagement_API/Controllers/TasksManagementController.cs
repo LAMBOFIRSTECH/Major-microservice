@@ -5,7 +5,7 @@ using TasksManagement_API.Models;
 using TasksManagement_API.Interfaces;
 namespace TasksManagement_API.Controllers;
 [ApiController]
-[Route("api/v1/")]
+[Route("data")]
 
 public class TasksManagementController : ControllerBase
 {

@@ -5,24 +5,25 @@ using TasksManagement_API.Interfaces;
 using TasksManagement_API.Models;
 namespace TasksManagement_API.Controllers;
 [ApiController]
-[Route("api/v1/")]
+[Route("data")]
 public class UsersManagementController : ControllerBase
 {
     private readonly IReadUsersMethods readUsersMethods;
     private readonly IWriteUsersMethods writeUsersMethods;
-    public UsersManagementController(IReadUsersMethods readUsersMethods, IWriteUsersMethods writeUsersMethods)
+    private readonly IRabbitMqService rabbitMqService;
+    public UsersManagementController(IReadUsersMethods readUsersMethods, IWriteUsersMethods writeUsersMethods, IRabbitMqService rabbitMqService)
     {
         this.readUsersMethods = readUsersMethods;
         this.writeUsersMethods = writeUsersMethods;
+        this.rabbitMqService = rabbitMqService;
     }
-
     /// <summary>
     /// Affiche la liste de tous les utilisateurs.
     /// </summary>
     [HttpGet("users")] // vrai endpoint
     public async Task<ActionResult> GetUsers()
     {
-		var listOfUsers = await readUsersMethods.GetUsers();
+        var listOfUsers = await readUsersMethods.GetUsers();
         if (listOfUsers.Any())
         {
             return Ok(listOfUsers);
@@ -115,6 +116,7 @@ public class UsersManagementController : ControllerBase
                 Role = utilisateur.Role,
                 Email = utilisateur.Email
             };
+            rabbitMqService.SendToRabbitMq("User created");
             await writeUsersMethods.CreateUser(newUtilisateur);
             return CreatedAtAction(nameof(GetUsers), new { newUtilisateur.Nom, newUtilisateur.Email, Role = newUtilisateur.Role.ToString() });
         }

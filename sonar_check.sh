@@ -30,7 +30,7 @@ SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 SOLUTION_FILE=$(ls *.sln)
 # ROOT_DIR=$(pwd)
 # COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
-COVERAGE_REPORT_PATH="/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/authentication/Couverture/coverage.opencover.xml"
+COVERAGE_REPORT_PATH="/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/majorapidata/Couverture/coverage.opencover.xml"
 # Vérification des variables essentielles
 required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
 for var in "${required_vars[@]}"; do
