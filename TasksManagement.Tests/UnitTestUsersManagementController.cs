@@ -11,13 +11,15 @@ public class UnitTestUsersManagementController
 {
     private readonly Mock<IReadUsersMethods> mockReadUsersMethods;
     private readonly Mock<IWriteUsersMethods> mockWriteUsersMethods;
+    private readonly Mock<IRabbitMqService> mockRabbit;
     private readonly UsersManagementController controller;
 
     public UnitTestUsersManagementController()
     {
         mockReadUsersMethods = new Mock<IReadUsersMethods>();
         mockWriteUsersMethods = new Mock<IWriteUsersMethods>();
-        controller = new UsersManagementController(mockReadUsersMethods.Object, mockWriteUsersMethods.Object);
+        mockRabbit = new Mock<IRabbitMqService>();
+        controller = new UsersManagementController(mockReadUsersMethods.Object, mockWriteUsersMethods.Object,mockRabbit.Object);
     }
 
     [Fact]

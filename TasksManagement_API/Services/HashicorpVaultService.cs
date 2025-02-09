@@ -3,7 +3,7 @@ using TasksManagement_API.Interfaces;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.AppRole;
 using VaultSharp.V1.AuthMethods.Token;
-namespace Authentifications.Services;
+namespace TasksManagement_API.Services;
 public class HashicorpVaultService : IHashicorpVaultService
 {
     private readonly IConfiguration configuration;

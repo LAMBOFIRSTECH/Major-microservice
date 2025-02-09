@@ -266,3 +266,5 @@
 /home/snow/majorapidata/TasksManagement.Tests/obj/Debug/net6.0/ref/TasksManagement.Tests.dll
 /home/snow/majorapidata/TasksManagement.Tests/obj/Debug/net6.0/TasksManagement.Tests.pdb
 /home/snow/majorapidata/TasksManagement.Tests/obj/Debug/net6.0/TasksManagement.Tests.genruntimeconfig.cache
+/home/snow/majorapidata/TasksManagement.Tests/bin/Debug/net6.0/RabbitMQ.Client.dll
+/home/snow/majorapidata/TasksManagement.Tests/bin/Debug/net6.0/System.Threading.Channels.dll
