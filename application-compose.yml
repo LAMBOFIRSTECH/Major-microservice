@@ -6,7 +6,8 @@ services:
     ports:
       - "7082:7082"
     networks:
-      - net_api
+      net_api: 
+        ipv4_address: 172.28.0.7
     volumes:
       -  /etc/ssl/certs/localhost.pfx:/etc/ssl/certs/localhost.pfx # Certificat pour le serveur en variable d'environnements
       - ./appsettings.json:/app/appsettings.Development.json
